@@ -48,6 +48,21 @@ httpx    >= 0.28.1
 
 ---
 
+**Note:** If you are on MacOS, you do not have to follow the instructions provided at the link for
+[uv](https://docs.astral.sh/uv/). Instead you can just use brew install. This makes it so you do not need root
+permissions to install the program.
+
+```bash
+brew install uv
+```
+
+To install mongodb for MacOS:
+
+```bash
+brew tap mongodb/brew
+brew install mongodb-community
+```
+
 ## Setup & Running
 
 ### 1. Install dependencies
