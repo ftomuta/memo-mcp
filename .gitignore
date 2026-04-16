@@ -8,3 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+
+# IDE folders and settings
+.idea
+.vscode
+.cache
