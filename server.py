@@ -43,6 +43,12 @@ class player:
     def calculate_damage(self, random_number: int):
         return (random_number * (self.level/2)) + self.strength
 
+    def save(self):
+        if (players.find_one({"username": self.username})):
+            players.update_one({"username": self.username}, {"$set": {"level": self.level, "xp": self.xp, "strength": self.strength, "vitality": self.vitality, "intelligence": self.intelligence}})
+        else:
+            players.insert_one({"username":self.username, "level": self.level, "xp": self.xp, "strength": self.strength, "vitality": self.vitality, "intelligence": self.intelligence}})
+
 @mcp.tool()
 def get_player(username: str) -> dict:
     """Retrieves a player's full NoSQL document."""
@@ -54,7 +60,8 @@ def add_new_player(username: str) -> str:
     """Inserts a new player document with default values."""
     if players.find_one({"username": username}):
         return "Error: Player already exists."
-    players.insert_one(player(username))
+    toAdd = player(username)
+    toAdd.save()
     return f"Success! Player {username} has been added."
 
 @mcp.tool()
@@ -96,8 +103,8 @@ def duel_players(player1: str, player2: str) -> str:
         else:
          winner = player1
 
-    players.replace_one({"username": player1}, player1)
-    players.replace_one({"username": player2}, player2)
+    p1.save()
+    p2.save()
     
     return f"Duel result: {winner} wins. {player1} HP: {hp1}, {player2} HP: {hp2}"
 
