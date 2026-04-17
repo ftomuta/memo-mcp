@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@mcp-use/cli": "^3.0.0"
+  }
+}

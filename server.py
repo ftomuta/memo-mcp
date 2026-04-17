@@ -25,20 +25,21 @@ class player:
         self.xp = 0
 
     def get_max_health(self):
-        return self.vitality * (10 + (level/2))
+        return self.vitality * (10 + (self.level/2))
 
     def gain_exp(self, opponent: player, random_number: int):
-        self.xp += max(opponent.level - self.level, 1) + intelligence
-        while xp >= 100 + (50 * level):
-            xp -= 100 + 50 * level
-            level += 1
+        self.xp += max(opponent.level - self.level, 1) + self.intelligence
+        level_mod = 100 / max(1, 100 - self.level)
+        while self.xp >= level_mod + (50 * (level_mod - 1)):
+            self.xp -= level_mod + (50 * (level_mod - 1))
+            self.level += 1
             match random_number:
                 case 1:
-                    strength += 2
+                    self.strength += 2
                 case 2:
-                    intelligence += 2
+                    self.intelligence += 2
                 case _:
-                    vitality += 2
+                    self.vitality += 2
 
     def calculate_damage(self, random_number: int):
         return (random_number * (self.level/2)) + self.strength
@@ -47,13 +48,26 @@ class player:
         if (players.find_one({"username": self.username})):
             players.update_one({"username": self.username}, {"$set": {"level": self.level, "xp": self.xp, "strength": self.strength, "vitality": self.vitality, "intelligence": self.intelligence}})
         else:
-            players.insert_one({"username":self.username, "level": self.level, "xp": self.xp, "strength": self.strength, "vitality": self.vitality, "intelligence": self.intelligence}})
+            players.insert_one({"username":self.username, "level": self.level, "xp": self.xp, "strength": self.strength, "vitality": self.vitality, "intelligence": self.intelligence})
+
+def load_player(username: str) -> player:
+    output: player = None
+    database_info = players.find_one({"username": username})
+    if database_info:
+        output = player(username)
+        output.strength = database_info["strength"]
+        output.vitality = database_info["vitality"]
+        output.intelligence = database_info["intelligence"]
+        output.level = database_info["level"]
+        output.xp = database_info["xp"]
+
+    return output
 
 @mcp.tool()
 def get_player(username: str) -> dict:
     """Retrieves a player's full NoSQL document."""
-    player = players.find_one({"username": username}, {"_id": 0})
-    return player if player else {"error": "Player not found"}
+    player = load_player(username)
+    return player.__dict__ if player else {"error": "Player not found"}
 
 @mcp.tool()
 def add_new_player(username: str) -> str:
@@ -79,8 +93,8 @@ def get_leaderboard() -> list:
 @mcp.tool()
 def duel_players(player1: str, player2: str) -> str:
     """Simulates a duel between two players until one reaches 2 HP or below."""
-    p1 = player(players.find_one({"username": player1}))
-    p2 = player(players.find_one({"username": player2}))
+    p1 = load_player(player1)
+    p2 = load_player(player2)
     if not p1 or not p2:
         return "One or both players not found"
     
@@ -89,15 +103,15 @@ def duel_players(player1: str, player2: str) -> str:
     winner = ""
     
     while hp1 > 2 and hp2 > 2:
-        hp2 -= p1.calculate_damage(random.random_number(0,10))
-        hp1 -= p2.calculate_damage(random.random_number(0,10))
+        hp2 -= p1.calculate_damage(random.randint(0,10))
+        hp1 -= p2.calculate_damage(random.randint(0,10))
 
     if (hp2 >= hp1): 
-        p2.gain_exp(p1, random.random_number(1,3))
+        p2.gain_exp(p1, random.randint(1,3))
         winner = player2
 
     if (hp1 >= hp2):
-        p1.gain_exp(p2, random.random_number(1,3))
+        p1.gain_exp(p2, random.randint(1,3))
         if winner != "":
             winner = "draw"
         else:
